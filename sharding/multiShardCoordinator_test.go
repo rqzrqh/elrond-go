@@ -152,6 +152,42 @@ func TestMultiShardCoordinator_ComputeIdSameSuffixHasSameShard(t *testing.T) {
 	}
 }
 
+func TestMultiShardCoordinator_ComputeIdSameBiggerNumberOfShards(t *testing.T) {
+
+	dataSet := []struct {
+		nrOfShards, address, shardId uint32
+	}{
+		{128, 0, 0},
+		{128, 1, 1},
+		{128, 127, 127},
+		{128, 128, 0},
+		{128, 129, 1},
+		{255, 254, 254},
+		{255, 255, 0},
+		{255, 256, 1},
+		{255, 128, 0},
+		{255, 254 * 255, 254},
+		{255, 255 * 255, 0},
+		{255, 256 * 255, 0},
+		{255, 100*255 + 13, 13},
+		//{128,129, 1},
+		//{128,0, 0},
+		//{128,1, 1},
+		//{128,127, 127},
+		//{128,128, 0},
+		//{128,129, 1},
+	}
+	for _, data := range dataSet {
+		t.Run(fmt.Sprintf("%d %d %d", data.nrOfShards, data.address, data.shardId), func(t *testing.T) {
+			sr, _ := NewMultiShardCoordinator(data.nrOfShards, 0)
+			addr := getAddressFromUint32(data.address)
+			shardId := sr.ComputeId(addr)
+
+			assert.Equal(t, data.shardId, shardId)
+		})
+	}
+}
+
 func TestMultiShardCoordinator_SameShardSameAddress(t *testing.T) {
 	shard, _ := NewMultiShardCoordinator(1, 0)
 	addr1 := getAddressFromUint32(uint32(1))
